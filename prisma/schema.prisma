@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  supabaseId  String   @unique
+  email       String   @unique
+  name        String
+  role        UserRole @default(USER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  projects    Project[]
+  estimates   Estimate[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  TEAM
+}
+
+model Project {
+  id              String            @id @default(cuid())
+  title           String
+  description     String
+  projectType     ProjectType
+  userId          String
+  supabaseUserId  String
+  status          ProjectStatus     @default(PENDING)
+  priority        Priority          @default(MEDIUM)
+
+  // Budget
+  budgetMin       Float?
+  budgetMax       Float?
+  budgetCurrency  String?           @default("USD")
+
+  // Dates
+  deadline        DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  lastUpdated     DateTime          @default(now())
+
+  // Location
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+
+  // Notes
+  adminNotes      String?
+  customerNotes   String?
+
+  // Relations
+  user            User              @relation(fields: [userId], references: [id])
+  attachments     Attachment[]
+  estimate        Estimate?
+  googleDrive     GoogleDrive?
+
+  @@map("projects")
+}
+
+enum ProjectType {
+  CONSTRUCTION
+  RENOVATION
+  INTERIOR
+  ARCHITECTURE
+  OTHER
+}
+
+enum ProjectStatus {
+  PENDING
+  IN_PROGRESS
+  ESTIMATE_READY
+  APPROVED
+  IN_CONSTRUCTION
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Attachment {
+  id          String        @id @default(cuid())
+  projectId   String
+  type        AttachmentType
+  url         String        // Cloudinary or Supabase Storage URL
+  filename    String
+  uploadedAt  DateTime      @default(now())
+
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+enum AttachmentType {
+  SKETCH
+  PHOTO
+  DOCUMENT
+  NOTE
+}
+
+model Estimate {
+  id            String    @id @default(cuid())
+  projectId     String    @unique
+  amount        Float
+  currency      String    @default("USD")
+  fileUrl       String    // Google Drive URL
+  uploadedAt    DateTime  @default(now())
+  uploadedById  String
+
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploadedBy    User      @relation(fields: [uploadedById], references: [id])
+
+  @@map("estimates")
+}
+
+model GoogleDrive {
+  id              String  @id @default(cuid())
+  projectId       String  @unique
+  folderId        String?
+  folderUrl       String?
+  estimateFileId  String?
+  estimateUrl     String?
+
+  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("google_drive")
+}
