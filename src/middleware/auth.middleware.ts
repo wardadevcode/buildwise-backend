@@ -18,24 +18,27 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
       return res.status(401).json({ error: 'Access token required' })
     }
 
-    // Verify token with Supabase
-    const supabaseUser = await supabaseService.verifyToken(token)
-    if (!supabaseUser) {
+    // For now, just decode the JWT we created and get user from database
+    // This is simpler than using Supabase's verifyToken which expects Supabase JWTs
+    try {
+      const jwt = require('jsonwebtoken')
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; supabaseId: string }
+
+      // Get user from database
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId }
+      })
+
+      if (!user) {
+        return res.status(401).json({ error: 'User not found' })
+      }
+
+      req.user = user
+      next()
+    } catch (jwtError) {
+      logger.error('JWT verification error:', jwtError)
       return res.status(401).json({ error: 'Invalid token' })
     }
-
-    // Get user from database
-    const user = await prisma.user.findUnique({
-      where: { supabaseId: supabaseUser.id }
-    })
-
-    if (!user) {
-      return res.status(401).json({ error: 'User not found' })
-    }
-
-    req.user = user
-    req.supabaseUser = supabaseUser
-    next()
   } catch (error) {
     logger.error('Authentication error:', error)
     return res.status(401).json({ error: 'Authentication failed' })

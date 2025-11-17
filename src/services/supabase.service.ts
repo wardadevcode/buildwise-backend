@@ -32,11 +32,13 @@ class SupabaseService {
 
   async createUser(email: string, password: string, userMetadata?: any) {
     try {
-      const { data, error } = await this.client.auth.admin.createUser({
+      // Use signUp instead of admin.createUser for client-side registration
+      const { data, error } = await this.client.auth.signUp({
         email,
         password,
-        user_metadata: userMetadata,
-        email_confirm: true
+        options: {
+          data: userMetadata
+        }
       })
       if (error) throw error
       return data.user

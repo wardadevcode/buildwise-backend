@@ -8,22 +8,27 @@ import { validateData } from '../utils/validation'
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = validateData(require('../utils/validation').registerSchema, req.body)
+    const body = req.body as { email: string; password: string; name: string }
+    const validatedData = validateData(require('../utils/validation').registerSchema, body)
+    const { email, password, name } = validatedData as { email: string; password: string; name: string }
+    console.log('Registration request:', { email, name })
 
     // Create user in Supabase
     const supabaseUser = await supabaseService.createUser(email, password, { name })
+    console.log('Supabase user created:', supabaseUser)
 
     // Create user in database
     const user = await prisma.user.create({
       data: {
-        supabaseId: supabaseUser.id,
+        supabaseId: supabaseUser!.id,
         email,
         name,
       }
     })
+    console.log('Database user created:', user)
 
     logger.info(`User registered: ${user.id}`)
-    res.status(201).json({
+    const response = {
       message: 'User registered successfully',
       user: {
         id: user.id,
@@ -31,8 +36,11 @@ export const register = async (req: Request, res: Response) => {
         name: user.name,
         role: user.role
       }
-    })
+    }
+    console.log('Registration response:', response)
+    res.status(201).json(response)
   } catch (error: any) {
+    console.error('Registration error:', error)
     logger.error('Registration error:', error)
     if (error.message?.includes('already registered')) {
       return res.status(400).json({ error: 'User already exists' })
@@ -43,24 +51,35 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = validateData(require('../utils/validation').loginSchema, req.body)
+    const body = req.body as { email: string; password: string }
+    const validatedData = validateData(require('../utils/validation').loginSchema, body)
+    const { email, password } = validatedData as { email: string; password: string }
+    console.log('Login request:', { email })
 
-    // Get user from Supabase
-    const { data: supabaseUsers } = await supabaseService.getClient().auth.admin.listUsers()
-    const supabaseUser = supabaseUsers.users.find(u => u.email === email)
+    // Sign in with Supabase
+    const { data, error } = await supabaseService.getClient().auth.signInWithPassword({
+      email,
+      password
+    })
 
-    if (!supabaseUser) {
+    if (error) {
+      console.log('Supabase login error:', error)
       return res.status(401).json({ error: 'Invalid credentials' })
     }
 
+    console.log('Supabase login successful:', data.user?.id)
+
     // Get user from database
     const user = await prisma.user.findUnique({
-      where: { supabaseId: supabaseUser.id }
+      where: { supabaseId: data.user!.id }
     })
 
     if (!user) {
+      console.log('User not found in database')
       return res.status(401).json({ error: 'User not found' })
     }
+
+    console.log('Database user found:', user.id)
 
     // Generate JWT token
     const token = jwt.sign(
@@ -70,7 +89,7 @@ export const login = async (req: Request, res: Response) => {
     )
 
     logger.info(`User logged in: ${user.id}`)
-    res.json({
+    const response = {
       message: 'Login successful',
       token,
       user: {
@@ -79,8 +98,11 @@ export const login = async (req: Request, res: Response) => {
         name: user.name,
         role: user.role
       }
-    })
+    }
+    console.log('Login response:', response)
+    res.json(response)
   } catch (error) {
+    console.error('Login error:', error)
     logger.error('Login error:', error)
     res.status(500).json({ error: 'Login failed' })
   }

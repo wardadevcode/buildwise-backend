@@ -17,28 +17,30 @@ export const updateUserSchema = z.object({
 export const createProjectSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
-  projectType: z.enum(['CONSTRUCTION', 'RENOVATION', 'INTERIOR', 'ARCHITECTURE', 'OTHER']),
-  budgetMin: z.number().positive().optional(),
-  budgetMax: z.number().positive().optional(),
-  budgetCurrency: z.string().optional().default('USD'),
-  deadline: z.string().datetime().optional(),
+  projectType: z.string().min(1), // Changed from enum to string to match frontend
+  priority: z.string().optional().default('MEDIUM'), // Added priority field
+  minBudget: z.string().optional(), // Changed from budgetMin to minBudget
+  maxBudget: z.string().optional(), // Changed from budgetMax to maxBudget
+  currency: z.string().optional().default('USD'), // Changed from budgetCurrency to currency
+  deadline: z.string().optional(), // Changed from datetime to string
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
   zipCode: z.string().optional(),
   customerNotes: z.string().optional(),
+  // File fields will be handled separately in the controller
 })
 
 export const updateProjectSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().min(1).optional(),
-  projectType: z.enum(['CONSTRUCTION', 'RENOVATION', 'INTERIOR', 'ARCHITECTURE', 'OTHER']).optional(),
+  projectType: z.string().optional(),
   status: z.enum(['PENDING', 'IN_PROGRESS', 'ESTIMATE_READY', 'APPROVED', 'IN_CONSTRUCTION', 'COMPLETED', 'CANCELLED']).optional(),
-  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
-  budgetMin: z.number().positive().optional(),
-  budgetMax: z.number().positive().optional(),
-  budgetCurrency: z.string().optional(),
-  deadline: z.string().datetime().optional(),
+  priority: z.string().optional(),
+  minBudget: z.string().optional(),
+  maxBudget: z.string().optional(),
+  currency: z.string().optional(),
+  deadline: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
