@@ -68,7 +68,6 @@ model Project {
   user            User              @relation(fields: [userId], references: [id])
   attachments     Attachment[]
   estimate        Estimate?
-  googleDrive     GoogleDrive?
 
   @@map("projects")
 }
@@ -123,7 +122,7 @@ model Estimate {
   projectId     String    @unique
   amount        Float
   currency      String    @default("USD")
-  fileUrl       String    // Google Drive URL
+  fileUrl       String    // Supabase Storage URL
   uploadedAt    DateTime  @default(now())
   uploadedById  String
 
@@ -131,17 +130,4 @@ model Estimate {
   uploadedBy    User      @relation(fields: [uploadedById], references: [id])
 
   @@map("estimates")
-}
-
-model GoogleDrive {
-  id              String  @id @default(cuid())
-  projectId       String  @unique
-  folderId        String?
-  folderUrl       String?
-  estimateFileId  String?
-  estimateUrl     String?
-
-  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@map("google_drive")
 }

@@ -1,8 +1,10 @@
 import { Response } from 'express'
+import path from 'path'
 import { prisma } from '../utils/prisma'
 import logger from '../utils/logger'
 import { validateData } from '../utils/validation'
 import { AuthRequest } from '../middleware/auth.middleware'
+import supabaseService from '../services/supabase.service'
 
 export const getProjects = async (req: AuthRequest, res: Response) => {
   try {
@@ -175,8 +177,73 @@ export const createProject = async (req: AuthRequest, res: Response) => {
     })
 
     console.log('Project created:', project)
+
+    // Handle file uploads if any files were provided
+    const attachments: any[] = []
+    if (files) {
+      console.log('Processing uploaded files...')
+
+      // Process each file type
+      const fileTypes = [
+        { field: 'sketches', type: 'SKETCH' as const },
+        { field: 'photos', type: 'PHOTO' as const },
+        { field: 'notes', type: 'NOTE' as const },
+        { field: 'documents', type: 'DOCUMENT' as const }
+      ]
+
+      for (const { field, type } of fileTypes) {
+        const fieldFiles = files[field]
+        if (fieldFiles && fieldFiles.length > 0) {
+          console.log(`Processing ${fieldFiles.length} ${field} files...`)
+
+          for (const file of fieldFiles) {
+            try {
+              // Generate unique filename
+              const fileExt = path.extname(file.originalname)
+              const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt}`
+              const filePath = `projects/${project.id}/${field}/${fileName}`
+
+              // Upload to Supabase Storage
+              await supabaseService.uploadFile('buildwise-attachments', filePath, file.buffer, {
+                contentType: file.mimetype,
+                upsert: false
+              })
+
+              // Get public URL
+              const fileUrl = await supabaseService.getFileUrl('buildwise-attachments', filePath)
+
+              // Create attachment record
+              const attachment = await prisma.attachment.create({
+                data: {
+                  projectId: project.id,
+                  type,
+                  url: fileUrl,
+                  filename: file.originalname
+                }
+              })
+
+              attachments.push(attachment)
+              console.log(`Uploaded ${field} file: ${file.originalname}`)
+            } catch (fileError) {
+              console.error(`Error uploading ${field} file ${file.originalname}:`, fileError)
+              // Continue with other files even if one fails
+            }
+          }
+        }
+      }
+    }
+
+    // Fetch updated project with attachments
+    const projectWithAttachments = await prisma.project.findUnique({
+      where: { id: project.id },
+      include: {
+        attachments: true,
+        estimate: true
+      }
+    })
+
     logger.info(`Project created: ${project.id} by user ${userId}`)
-    const response = { project }
+    const response = { project: projectWithAttachments, uploadedAttachments: attachments.length }
     console.log('Create project response:', response)
     res.status(201).json(response)
   } catch (error) {

@@ -10,6 +10,7 @@ dotenv.config()
 // Import routes
 import authRoutes from './routes/auth.routes'
 import projectRoutes from './routes/project.routes'
+import adminRoutes from './routes/admin.routes'
 
 // Import middleware
 import logger from './utils/logger'
@@ -62,6 +63,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes)
 app.use('/api/projects', projectRoutes)
+app.use('/api/admin', adminRoutes)
 
 // Initialize Supabase service to ensure it's ready
 supabaseService.getClient()
