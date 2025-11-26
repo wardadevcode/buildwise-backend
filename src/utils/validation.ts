@@ -60,7 +60,7 @@ export const createEstimateSchema = z.object({
 // Attachment validation schemas
 export const createAttachmentSchema = z.object({
   projectId: z.string().min(1),
-  type: z.enum(['SKETCH', 'PHOTO', 'DOCUMENT', 'NOTE']),
+  type: z.enum(['SKETCH', 'PHOTO', 'DOCUMENT', 'NOTE', 'ADDITIONAL_DOCUMENT']),
   filename: z.string().min(1),
   url: z.string().url(),
 })

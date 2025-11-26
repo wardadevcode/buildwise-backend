@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -11,123 +10,240 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Enums
+enum ProjectStatus {
+  PENDING
+  ESTIMATE_READY
+  APPROVED
+  IN_CONSTRUCTION
+  CHANGE_ORDER_PENDING
+  COMPLETED
+}
+
+enum ProjectPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ProjectType {
+  SUPPLEMENT
+  REMODEL
+  RECONSTRUCTION
+  MITIGATION
+}
+
+enum TimelineEventType {
+  CREATED
+  ESTIMATE
+  APPROVED
+  ASSIGNED
+  STARTED
+  COMPLETED
+  CHANGE_ORDER
+}
+
+enum InvoiceStatus {
+  PAID
+  PENDING
+  OVERDUE
+}
+
+enum UserRole {
+  ADMIN
+  TEAM_LEAD
+  SENIOR_SPECIALIST
+  SPECIALIST
+  PROJECT_COORDINATOR
+  FIELD_MANAGER
+  DOCUMENT_SPECIALIST
+  QUALITY_INSPECTOR
+  SENIOR_ESTIMATOR
+}
+
+enum UserStatus {
+  AVAILABLE
+  IN_CALL
+  OFFLINE
+}
+
+// Models
 model User {
-  id          String   @id @default(cuid())
-  supabaseId  String   @unique
-  email       String   @unique
-  name        String
-  role        UserRole @default(USER)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  supabaseId    String   @unique // Links to Supabase auth
+  name          String
+  email         String   @unique
+  role          UserRole
+  initials      String   // e.g., "MG"
+  color         String   // CSS class, e.g., "bg-blue-500"
+  currentProjects Int    @default(0)
+  maxProjects   Int      @default(5)
+  status        UserStatus @default(AVAILABLE)
+  activeTasks   Int      @default(0)
+  onTimeRate    Int      @default(0) // Percentage
+  revenue       Int      @default(0) // Total revenue in cents
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
-  projects    Project[]
-  estimates   Estimate[]
+  assignedProjects Project[] @relation("ProjectAssignees")
+  primaryProjects  Project[] @relation("ProjectPrimaryAssignee")
+  activities       Activity[]
+  estimates        Estimate[]
+  invoices         Invoice[] // If users generate invoices
 
   @@map("users")
 }
 
-enum UserRole {
-  USER
-  ADMIN
-  TEAM
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  address   String   // Full address
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projects Project[]
+
+  @@map("customers")
+}
+
+model Adjuster {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  company   String   // e.g., "State Farm Insurance"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projects Project[]
+
+  @@map("adjusters")
 }
 
 model Project {
-  id              String            @id @default(cuid())
-  title           String
-  description     String
-  projectType     ProjectType
-  userId          String
-  supabaseUserId  String
-  status          ProjectStatus     @default(PENDING)
-  priority        Priority          @default(MEDIUM)
-
-  // Budget
-  budgetMin       Float?
-  budgetMax       Float?
-  budgetCurrency  String?           @default("USD")
-
-  // Dates
-  deadline        DateTime?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  lastUpdated     DateTime          @default(now())
-
-  // Location
-  address         String?
-  city            String?
-  state           String?
-  zipCode         String?
-
-  // Notes
-  adminNotes      String?
-  customerNotes   String?
+  id                String         @id @default(cuid())
+  projectName       String         // e.g., "STEVEN_&_SHELLEY_PH5"
+  title             String
+  description       String?
+  status            ProjectStatus  @default(PENDING)
+  priority          ProjectPriority @default(MEDIUM)
+  type              ProjectType    @default(REMODEL)
+  scopeType         String?        // e.g., "Residential"
+  budgetMin         Int            // In cents
+  budgetMax         Int            // In cents
+  actualCost        Int?           // In cents
+  insuredBy         String?        // e.g., "State Farm Insurance"
+  deadline          DateTime?
+  startDate         DateTime?
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  contractorName    String?
+  contractorId      String?        // If contractor is a separate entity
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   // Relations
-  user            User              @relation(fields: [userId], references: [id])
-  attachments     Attachment[]
-  estimate        Estimate?
+  customerId        String
+  customer          Customer       @relation(fields: [customerId], references: [id])
+  adjusterId        String?
+  adjuster          Adjuster?      @relation(fields: [adjusterId], references: [id])
+  assignees         User[]         @relation("ProjectAssignees")
+  primaryAssigneeId String?
+  primaryAssignee   User?          @relation("ProjectPrimaryAssignee", fields: [primaryAssigneeId], references: [id])
+  timelineEvents    TimelineEvent[]
+  attachments       Attachment[]
+  estimates         Estimate[]
+  invoices          Invoice[]
 
   @@map("projects")
 }
 
-enum ProjectType {
-  CONSTRUCTION
-  RENOVATION
-  INTERIOR
-  ARCHITECTURE
-  OTHER
-}
+model TimelineEvent {
+  id        String            @id @default(cuid())
+  date      DateTime
+  event     String
+  type      TimelineEventType
+  user      String            // User name or "System"
+  createdAt DateTime          @default(now())
 
-enum ProjectStatus {
-  PENDING
-  IN_PROGRESS
-  ESTIMATE_READY
-  APPROVED
-  IN_CONSTRUCTION
-  COMPLETED
-  CANCELLED
-}
+  // Relations
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
+  @@map("timeline_events")
 }
 
 model Attachment {
-  id          String        @id @default(cuid())
-  projectId   String
-  type        AttachmentType
-  url         String        // Cloudinary or Supabase Storage URL
-  filename    String
-  uploadedAt  DateTime      @default(now())
+  id          String   @id @default(cuid())
+  name        String
+  url         String   // Supabase Storage URL
+  type        String   // "photo", "pdf", "document"
+  uploadedAt  DateTime @default(now())
 
-  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Relations
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("attachments")
 }
 
-enum AttachmentType {
-  SKETCH
-  PHOTO
-  DOCUMENT
-  NOTE
-}
-
 model Estimate {
-  id            String    @id @default(cuid())
-  projectId     String    @unique
-  amount        Float
-  currency      String    @default("USD")
-  fileUrl       String    // Supabase Storage URL
-  uploadedAt    DateTime  @default(now())
-  uploadedById  String
+  id             String   @id @default(cuid())
+  total          Int      // In cents
+  lineItems      Json     // Array of { description: string, cost: number }
+  pdfUrl         String?  // Supabase URL
+  changeOrderNumber Int?  // For change orders
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  uploadedBy    User      @relation(fields: [uploadedById], references: [id])
+  // Relations
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdById    String
+  createdBy      User     @relation(fields: [createdById], references: [id])
 
   @@map("estimates")
+}
+
+model Invoice {
+  id             String        @id @default(cuid()) // e.g., "#INV-2024-0723"
+  customer       String        // Customer name
+  address        String
+  date           DateTime
+  amount         Int           // In cents
+  dueDate        DateTime
+  status         InvoiceStatus @default(PENDING)
+  projectDetails String?       // e.g., "Kitchen Renovation" or combined
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relations
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id])
+  generatedById  String
+  generatedBy    User          @relation(fields: [generatedById], references: [id])
+
+  @@map("invoices")
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  time      String   // e.g., "2:30 PM"
+  user      String
+  action    String
+  userColor String?  // CSS class for display
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId    String
+  userAccount User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activities")
 }

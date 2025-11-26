@@ -10,6 +10,10 @@ dotenv.config()
 // Import routes
 import authRoutes from './routes/auth.routes'
 import projectRoutes from './routes/project.routes'
+import estimateRoutes from './routes/estimate.routes'
+import invoiceRoutes from './routes/invoice.routes'
+import userRoutes from './routes/user.routes'
+import activityRoutes from './routes/activity.routes'
 import adminRoutes from './routes/admin.routes'
 
 // Import middleware
@@ -42,12 +46,25 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// Request logging middleware
+// Request/Response logging middleware
 app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.path}`, {
+  const startTime = Date.now()
+  const requestId = Math.random().toString(36).substring(7)
+
+  // Log incoming request
+  console.log(`[${requestId}] REQUEST: ${req.method} ${req.originalUrl}`, {
     ip: req.ip,
-    userAgent: req.get('User-Agent')
+    userAgent: req.get('User-Agent'),
+    query: req.query,
+    body: req.method !== 'GET' ? req.body : undefined
   })
+
+  // Log response when finished
+  res.on('finish', () => {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] RESPONSE: ${req.method} ${req.originalUrl} - ${res.statusCode} - ${duration}ms`)
+  })
+
   next()
 })
 
@@ -63,6 +80,10 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes)
 app.use('/api/projects', projectRoutes)
+app.use('/api/estimates', estimateRoutes)
+app.use('/api/invoices', invoiceRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/activities', activityRoutes)
 app.use('/api/admin', adminRoutes)
 
 // Initialize Supabase service to ensure it's ready
