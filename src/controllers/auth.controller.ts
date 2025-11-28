@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma'
 import supabaseService from '../services/supabase.service'
 import logger from '../utils/logger'
 import { validateData } from '../utils/validation'
+import { UserRole } from '@prisma/client'
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -23,6 +24,15 @@ export const register = async (req: Request, res: Response) => {
         supabaseId: supabaseUser!.id,
         email,
         name,
+        role: UserRole.CUSTOMER, // Default role for new registrations
+        initials: name.split(' ').map(n => n[0]).join('').toUpperCase(),
+        color: '#3B82F6', // Default blue color
+        currentProjects: 0,
+        maxProjects: 5,
+        status: 'AVAILABLE',
+        activeTasks: 0,
+        onTimeRate: 100,
+        revenue: 0
       }
     })
     console.log('Database user created:', user)
@@ -165,11 +175,21 @@ export const callback = async (req: Request, res: Response) => {
     })
 
     if (!user) {
+      const userName = data.user.user_metadata?.name || data.user.email!.split('@')[0]
       user = await prisma.user.create({
         data: {
           supabaseId: data.user.id,
           email: data.user.email!,
-          name: data.user.user_metadata?.name || data.user.email!.split('@')[0],
+          name: userName,
+          role: UserRole.CUSTOMER, // Default role for OAuth registrations
+          initials: userName.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+          color: '#3B82F6', // Default blue color
+          currentProjects: 0,
+          maxProjects: 5,
+          status: 'AVAILABLE',
+          activeTasks: 0,
+          onTimeRate: 100,
+          revenue: 0
         }
       })
     }

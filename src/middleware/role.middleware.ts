@@ -21,5 +21,5 @@ export const requireRole = (allowedRoles: UserRole[]) => {
 }
 
 export const requireAdmin = requireRole([UserRole.ADMIN])
-export const requireTeamLead = requireRole([UserRole.ADMIN, UserRole.TEAM_LEAD])
-export const requireEstimator = requireRole([UserRole.ADMIN, UserRole.TEAM_LEAD, UserRole.SENIOR_ESTIMATOR])
+export const requireTeamMember = requireRole([UserRole.ADMIN, UserRole.TEAM_MEMBER])
+export const requireCustomer = requireRole([UserRole.CUSTOMER])

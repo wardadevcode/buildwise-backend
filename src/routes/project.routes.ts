@@ -12,7 +12,7 @@ import {
   createChangeOrder
 } from '../controllers/project.controller'
 import { authenticateToken } from '../middleware/auth.middleware'
-import { requireAdmin, requireTeamLead } from '../middleware/role.middleware'
+import { requireAdmin, requireTeamMember } from '../middleware/role.middleware'
 import { uploadProjectFiles, handleMulterError } from '../middleware/upload.middleware'
 
 const router = Router()
@@ -37,9 +37,9 @@ router.get('/documents', getUserDocuments)
 // Team members route
 router.get('/team', getTeamMembers)
 
-// Project status and workflow routes (require team lead or admin)
-router.patch('/:id/status', requireTeamLead, updateProjectStatus)
+// Project status and workflow routes (require team member or admin)
+router.patch('/:id/status', requireTeamMember, updateProjectStatus)
 router.post('/:id/approve-estimate', approveEstimate) // Customer can approve
-router.post('/:id/change-order', requireTeamLead, createChangeOrder)
+router.post('/:id/change-order', requireTeamMember, createChangeOrder)
 
 export default router

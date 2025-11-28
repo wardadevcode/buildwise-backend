@@ -560,7 +560,7 @@ export const getTeamMembers = async (req: AuthRequest, res: Response) => {
     const teamMembers = await prisma.user.findMany({
       where: {
         role: {
-          in: ['ADMIN', 'TEAM_LEAD', 'SENIOR_SPECIALIST', 'SPECIALIST', 'PROJECT_COORDINATOR', 'FIELD_MANAGER', 'DOCUMENT_SPECIALIST', 'QUALITY_INSPECTOR', 'SENIOR_ESTIMATOR']
+          in: ['ADMIN', 'TEAM_MEMBER']
         }
       },
       orderBy: { name: 'asc' }

@@ -14,6 +14,7 @@ import estimateRoutes from './routes/estimate.routes'
 import invoiceRoutes from './routes/invoice.routes'
 import userRoutes from './routes/user.routes'
 import activityRoutes from './routes/activity.routes'
+import dashboardRoutes from './routes/dashboard.routes'
 import adminRoutes from './routes/admin.routes'
 
 // Import middleware
@@ -84,6 +85,7 @@ app.use('/api/estimates', estimateRoutes)
 app.use('/api/invoices', invoiceRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/activities', activityRoutes)
+app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/admin', adminRoutes)
 
 // Initialize Supabase service to ensure it's ready

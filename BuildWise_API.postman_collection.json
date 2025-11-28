@@ -1,0 +1,813 @@
+{
+  "info": {
+    "name": "BuildWise API",
+    "description": "Complete API collection for BuildWise Construction Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "jwt_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"John Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user (defaults to CUSTOMER role)"
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', response.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login user and store JWT token"
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Get current authenticated user info"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/stats",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "stats"]
+            },
+            "description": "Get dashboard statistics including active/completed projects, recent projects, and activities"
+          }
+        },
+        {
+          "name": "Get Project Status Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/projects/status-breakdown",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "projects", "status-breakdown"]
+            },
+            "description": "Get breakdown of projects by status"
+          }
+        },
+        {
+          "name": "Get Revenue Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/revenue",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "revenue"]
+            },
+            "description": "Get revenue statistics from invoices"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Get All Projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects?page=1&limit=10&status=active&type=remodel",
+              "host": ["{{base_url}}"],
+              "path": ["projects"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "type",
+                  "value": "remodel"
+                }
+              ]
+            },
+            "description": "Get paginated list of projects with optional filters"
+          }
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectName\": \"STEVEN_&_SHELLEY_PH5\",\n  \"title\": \"Kitchen Renovation\",\n  \"description\": \"Complete kitchen remodel with new cabinets and appliances\",\n  \"type\": \"REMODEL\",\n  \"budgetMin\": 15000,\n  \"budgetMax\": 25000,\n  \"customerName\": \"Steven & Shelley Martinez\",\n  \"customerEmail\": \"steven.martinez@email.com\",\n  \"customerPhone\": \"(555) 123-4567\",\n  \"address\": \"123 Main St\",\n  \"city\": \"Anytown\",\n  \"state\": \"CA\",\n  \"zipCode\": \"12345\",\n  \"contractorName\": \"ABC Contractors\",\n  \"insuredBy\": \"State Farm Insurance\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects",
+              "host": ["{{base_url}}"],
+              "path": ["projects"]
+            },
+            "description": "Create a new project with customer and adjuster info"
+          }
+        },
+        {
+          "name": "Get Project by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/:projectId",
+              "host": ["{{base_url}}"],
+              "path": ["projects", ":projectId"],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "c1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Get detailed project information including customer, adjuster, timeline, and team assignments"
+          }
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Kitchen Renovation\",\n  \"description\": \"Updated description\",\n  \"actualCost\": 22000,\n  \"assignedTo\": [\"user-1\", \"user-2\"],\n  \"primaryAssignee\": \"user-1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/:projectId",
+              "host": ["{{base_url}}"],
+              "path": ["projects", ":projectId"],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "c1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Update project details, costs, and team assignments"
+          }
+        },
+        {
+          "name": "Update Project Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/:projectId/status",
+              "host": ["{{base_url}}"],
+              "path": ["projects", ":projectId", "status"],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "c1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Update project status (requires TEAM_MEMBER or ADMIN role)"
+          }
+        },
+        {
+          "name": "Approve Estimate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/:projectId/approve-estimate",
+              "host": ["{{base_url}}"],
+              "path": ["projects", ":projectId", "approve-estimate"],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "c1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Customer approval workflow - updates status to APPROVED"
+          }
+        },
+        {
+          "name": "Create Change Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"total\": 5000,\n  \"lineItems\": [\n    {\"description\": \"Additional electrical work\", \"cost\": 2500},\n    {\"description\": \"Extra plumbing fixtures\", \"cost\": 2500}\n  ],\n  \"pdfUrl\": \"https://example.com/change-order.pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/:projectId/change-order",
+              "host": ["{{base_url}}"],
+              "path": ["projects", ":projectId", "change-order"],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "c1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Create change order estimate (requires TEAM_MEMBER or ADMIN role)"
+          }
+        },
+        {
+          "name": "Get Team Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/team",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "team"]
+            },
+            "description": "Get available team members for project assignment"
+          }
+        },
+        {
+          "name": "Get Project Documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/documents?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "documents"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get all documents across projects with pagination"
+          }
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/:projectId",
+              "host": ["{{base_url}}"],
+              "path": ["projects", ":projectId"],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "c1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Delete a project (with status restrictions)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Estimates",
+      "item": [
+        {
+          "name": "Get All Estimates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/estimates?page=1&limit=10&projectId=:projectId",
+              "host": ["{{base_url}}"],
+              "path": ["estimates"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "projectId",
+                  "value": "c1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Get paginated list of estimates with optional project filter"
+          }
+        },
+        {
+          "name": "Create Estimate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"c1234567890abcdef\",\n  \"total\": 20000,\n  \"lineItems\": [\n    {\"description\": \"Kitchen cabinets\", \"cost\": 8000},\n    {\"description\": \"Countertops\", \"cost\": 5000},\n    {\"description\": \"Appliances\", \"cost\": 4000},\n    {\"description\": \"Installation\", \"cost\": 3000}\n  ],\n  \"pdfUrl\": \"https://example.com/estimate.pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/estimates",
+              "host": ["{{base_url}}"],
+              "path": ["estimates"]
+            },
+            "description": "Create estimate and update project status to ESTIMATE_READY"
+          }
+        },
+        {
+          "name": "Get Estimate by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/estimates/:estimateId",
+              "host": ["{{base_url}}"],
+              "path": ["estimates", ":estimateId"],
+              "variable": [
+                {
+                  "key": "estimateId",
+                  "value": "est1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Get estimate details with project information"
+          }
+        },
+        {
+          "name": "Update Estimate",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"total\": 22000,\n  \"lineItems\": [\n    {\"description\": \"Updated line item\", \"cost\": 22000}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/estimates/:estimateId",
+              "host": ["{{base_url}}"],
+              "path": ["estimates", ":estimateId"],
+              "variable": [
+                {
+                  "key": "estimateId",
+                  "value": "est1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Update estimate details"
+          }
+        },
+        {
+          "name": "Delete Estimate",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/estimates/:estimateId",
+              "host": ["{{base_url}}"],
+              "path": ["estimates", ":estimateId"],
+              "variable": [
+                {
+                  "key": "estimateId",
+                  "value": "est1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Delete an estimate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "Get All Invoices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/invoices?page=1&limit=10&status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["invoices"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            },
+            "description": "Get paginated list of invoices with optional status filter"
+          }
+        },
+        {
+          "name": "Create Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"c1234567890abcdef\",\n  \"customer\": \"Steven & Shelley Martinez\",\n  \"address\": \"123 Main St, Anytown, CA 12345\",\n  \"amount\": 20000,\n  \"dueDate\": \"2024-12-31\",\n  \"projectDetails\": \"Kitchen Renovation - Phase 1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/invoices",
+              "host": ["{{base_url}}"],
+              "path": ["invoices"]
+            },
+            "description": "Create invoice with automatic project linking"
+          }
+        },
+        {
+          "name": "Get Invoice by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/invoices/:invoiceId",
+              "host": ["{{base_url}}"],
+              "path": ["invoices", ":invoiceId"],
+              "variable": [
+                {
+                  "key": "invoiceId",
+                  "value": "inv1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Get invoice details"
+          }
+        },
+        {
+          "name": "Update Invoice",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAID\",\n  \"amount\": 20000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/invoices/:invoiceId",
+              "host": ["{{base_url}}"],
+              "path": ["invoices", ":invoiceId"],
+              "variable": [
+                {
+                  "key": "invoiceId",
+                  "value": "inv1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Update invoice status and details"
+          }
+        },
+        {
+          "name": "Delete Invoice",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/invoices/:invoiceId",
+              "host": ["{{base_url}}"],
+              "path": ["invoices", ":invoiceId"],
+              "variable": [
+                {
+                  "key": "invoiceId",
+                  "value": "inv1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Delete unpaid invoices only"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users & Team",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users?page=1&limit=20&role=TEAM_MEMBER",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "role",
+                  "value": "TEAM_MEMBER"
+                }
+              ]
+            },
+            "description": "Get paginated list of users with optional role/status filters"
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["users", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "usr1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Get detailed user profile with stats and recent activity"
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"maxProjects\": 6,\n  \"status\": \"AVAILABLE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["users", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "usr1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Update user details and workload settings"
+          }
+        },
+        {
+          "name": "Get Team Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/stats",
+              "host": ["{{base_url}}"],
+              "path": ["users", "stats"]
+            },
+            "description": "Get team performance metrics and statistics"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Activities",
+      "item": [
+        {
+          "name": "Get All Activities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/activities?page=1&limit=20&userId=:userId",
+              "host": ["{{base_url}}"],
+              "path": ["activities"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "userId",
+                  "value": "usr1234567890abcdef"
+                }
+              ]
+            },
+            "description": "Get paginated activity feed with optional user filter"
+          }
+        },
+        {
+          "name": "Create Activity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"Updated project timeline\",\n  \"time\": \"2:30 PM\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/activities",
+              "host": ["{{base_url}}"],
+              "path": ["activities"]
+            },
+            "description": "Create new activity entry"
+          }
+        },
+        {
+          "name": "Get Recent Activities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/activities/recent",
+              "host": ["{{base_url}}"],
+              "path": ["activities", "recent"]
+            },
+            "description": "Get last 10 recent activities"
+          }
+        },
+        {
+          "name": "Get Activity Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/activities/stats",
+              "host": ["{{base_url}}"],
+              "path": ["activities", "stats"]
+            },
+            "description": "Get activity statistics and analytics"
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/../health",
+              "host": ["{{base_url}}"],
+              "path": ["..", "health"]
+            },
+            "description": "Check if the backend is running (no auth required)"
+          }
+        }
+      ]
+    }
+  ]
+}
